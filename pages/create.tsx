@@ -1,74 +1,100 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
-import { query } from '../lib/db';
+import MathJax from 'react-mathjax2';
+import { post } from './api/problems';
 
-export default function Create() {
+type Props = {};
+
+type Problem = {
+  subject: string;
+  difficulty: string;
+  problem: string;
+  solution: string;
+};
+
+const CreateProblem: React.FC<Props> = () => {
   const router = useRouter();
   const [subject, setSubject] = useState('');
-  const [type, setType] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [problem, setProblem] = useState('');
   const [solution, setSolution] = useState('');
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const result = await query(
-      'INSERT INTO problems (subject, type, difficulty, problem, solution) VALUES (?, ?, ?, ?, ?)',
-      [subject, type, difficulty, problem, solution]
-    );
+
+    const newProblem: Problem = {
+      subject,
+      difficulty,
+      problem,
+      solution
+    };
+
+    await post(newProblem);
     router.push('/');
   };
 
   return (
     <Layout>
-      <h1>Create Problem</h1>
+      <h1>Create a Problem</h1>
       <form onSubmit={handleSubmit}>
-        <div>
+        <div className="form-group">
           <label htmlFor="subject">Subject</label>
           <input
-            id="subject"
             type="text"
+            className="form-control"
+            id="subject"
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
+            required
           />
         </div>
-        <div>
-          <label htmlFor="type">Type</label>
-          <input
-            id="type"
-            type="text"
-            value={type}
-            onChange={(event) => setType(event.target.value)}
-          />
-        </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="difficulty">Difficulty</label>
           <input
-            id="difficulty"
             type="text"
+            className="form-control"
+            id="difficulty"
             value={difficulty}
             onChange={(event) => setDifficulty(event.target.value)}
+            required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="problem">Problem</label>
-          <textarea
-            id="problem"
-            value={problem}
-            onChange={(event) => setProblem(event.target.value)}
-          />
+          <MathJax math={problem}>
+            {() => (
+              <textarea
+                className="form-control"
+                id="problem"
+                rows={3}
+                value={problem}
+                onChange={(event) => setProblem(event.target.value)}
+                required
+              />
+            )}
+          </MathJax>
         </div>
-        <div>
-          <label htmlFor="solution">Solution</label>
-          <textarea
-            id="solution"
-            value={solution}
-            onChange={(event) => setSolution(event.target.value)}
-          />
+        <div className="form-group">
+          <label htmlFor="solution">Solution (optional)</label>
+          <MathJax math={solution}>
+            {() => (
+              <textarea
+                className="form-control"
+                id="solution"
+                rows={3}
+                value={solution}
+                onChange={(event) => setSolution(event.target.value)}
+              />
+            )}
+          </MathJax>
         </div>
-        <button type="submit">Create Problem</button>
+        <button type="submit" className="btn btn-primary">
+          Submit
+        </button>
       </form>
     </Layout>
   );
-}
+};
+
+export default CreateProblem;
